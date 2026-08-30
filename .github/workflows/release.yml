@@ -4,10 +4,6 @@ on:
   push:
     tags: ['v*']
 
-env:
-  # npm 11 的 allow-scripts 安全策略默认拦截安装脚本，这里显式放行内核所需脚本
-  NPM_ALLOW: "@deepseek-ai/dsh-subprocess-local,koffi,node-pty,electron,@google/genai,protobufjs"
-
 jobs:
   release:
     runs-on: windows-latest
@@ -16,18 +12,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - name: Info
+        run: |
+          node --version
+          npm --version
       - name: Install deps
-        run: npm ci --legacy-peer-deps --allow-scripts="$env:NPM_ALLOW" --no-audit --no-fund
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
       - name: Ensure electron binary
         run: |
           if (-not (Test-Path node_modules\electron\dist\electron.exe)) {
             node node_modules\electron\install.js
           }
-      - name: Sync complete dsh kernel tree (npm 装出的树不完整)
+      - name: Extract vendored dsh kernel tree
         run: |
-          npm i -g "@deepseek-ai/dsh@0.1.1-rc.2" --allow-scripts="$env:NPM_ALLOW" --no-audit --no-fund
-          robocopy "$env:APPDATA\npm\node_modules\@deepseek-ai\dsh" "node_modules\@deepseek-ai\dsh" /E /NFL /NDL /NJH /NJS /NP
-          if ($LASTEXITCODE -le 7) { exit 0 }
+          New-Item -ItemType Directory -Force -Path node_modules\@deepseek-ai | Out-Null
+          tar -xzf vendor\dsh-kernel-0.1.1-rc.2.tar.gz -C node_modules\@deepseek-ai
+          if (-not (Test-Path node_modules\@deepseek-ai\dsh\lib\bin.js)) { Write-Error "vendored dsh tree missing" }
       - run: npm run icon
       - run: npm run dist
       - uses: softprops/action-gh-release@v2
