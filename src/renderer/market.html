@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>插件市场</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+      background: #0f1220; color: #e6e8f0; min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    header {
+      padding: 18px 24px;
+      background: linear-gradient(135deg, #141a33, #0f1220);
+      border-bottom: 1px solid #232a45;
+    }
+    h1 { font-size: 20px; }
+    .sub { color: #8b93b8; font-size: 12px; margin-top: 4px; }
+    main { padding: 20px 24px; flex: 1; }
+    .source { display: flex; gap: 8px; margin-bottom: 20px; }
+    .source input {
+      flex: 1; padding: 9px 12px; border-radius: 8px;
+      border: 1px solid #2c3357; background: #171c33; color: #e6e8f0; font-size: 13px;
+    }
+    button {
+      padding: 9px 16px; border: 0; border-radius: 8px;
+      background: #4d6bfe; color: #fff; cursor: pointer; font-size: 13px;
+    }
+    button:hover { background: #5d79ff; }
+    button:disabled { background: #3a4a8c; cursor: default; }
+    .card {
+      background: #171c33; border: 1px solid #232a45; border-radius: 12px;
+      padding: 16px; margin-bottom: 12px;
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    .card .name { font-size: 15px; font-weight: 600; }
+    .card .desc { color: #8b93b8; font-size: 12px; margin-top: 4px; max-width: 560px; }
+    .card .meta { color: #5d6688; font-size: 11px; margin-top: 6px; }
+    .status { margin-top: 12px; font-size: 13px; color: #8b93b8; min-height: 20px; }
+    .status.ok { color: #4ade80; }
+    .status.err { color: #f87171; }
+    .empty { color: #5d6688; font-size: 13px; padding: 24px 0; }
+    footer { padding: 12px 24px; color: #5d6688; font-size: 11px; border-top: 1px solid #1c2240; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>插件市场</h1>
+    <div class="sub">DeepSeek Harness Desktop · v0.1 基础版 · 预设类插件安装后需托盘「暂停内核」→「启动内核」重新加载生效</div>
+  </header>
+  <main>
+    <div class="source">
+      <input id="url" placeholder="市场清单 URL（JSON），例如 https://example.com/market.json" />
+      <button id="load">加载清单</button>
+    </div>
+    <div id="list"></div>
+    <div id="status" class="status"></div>
+  </main>
+  <footer>
+    清单格式：{ "name": "…", "plugins": [ { "id", "name", "description", "version", "type": "preset", "url": "…zip" } ] }
+  </footer>
+  <script>
+    const $ = (id) => document.getElementById(id)
+    const setStatus = (text, cls) => { const el = $('status'); el.textContent = text; el.className = 'status ' + (cls || '') }
+    const DEFAULT_URL = 'https://raw.githubusercontent.com/jiayu6153-gif/dsh-market/main/market.json'
+    $('url').value = localStorage.getItem('marketUrl') || DEFAULT_URL
+
+    $('load').addEventListener('click', async () => {
+      const url = $('url').value.trim()
+      if (!url) return setStatus('请输入清单 URL', 'err')
+      localStorage.setItem('marketUrl', url)
+      setStatus('正在加载清单…')
+      const res = await window.shell.fetchMarket(url)
+      if (!res.ok) return setStatus('加载失败：' + res.error, 'err')
+      render(res.data)
+    })
+
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+      ))
+    }
+
+    function render(data) {
+      const list = $('list')
+      list.innerHTML = ''
+      const plugins = (data && data.plugins) || []
+      setStatus(`「${(data && data.name) || '未命名市场'}」共 ${plugins.length} 个插件`)
+      if (!plugins.length) { list.innerHTML = '<div class="empty">该清单没有插件条目</div>'; return }
+      for (const p of plugins) {
+        const card = document.createElement('div')
+        card.className = 'card'
+        const info = document.createElement('div')
+        info.innerHTML =
+          `<div class="name">${escapeHtml(p.name || p.id)}</div>` +
+          `<div class="desc">${escapeHtml(p.description || '')}</div>` +
+          `<div class="meta">v${escapeHtml(p.version || '?')} · 类型 ${escapeHtml(p.type || '?')} · ${escapeHtml(p.id || '')}</div>`
+        const btn = document.createElement('button')
+        btn.textContent = '安装'
+        btn.addEventListener('click', async () => {
+          btn.disabled = true
+          btn.textContent = '安装中…'
+          const res = await window.shell.installMarket(p)
+          btn.disabled = false
+          btn.textContent = '安装'
+          if (res.ok) setStatus(`已安装 ${p.name || p.id} → ${res.dest}（重启内核后生效）`, 'ok')
+          else setStatus('安装失败：' + res.error, 'err')
+        })
+        card.append(info, btn)
+        list.append(card)
+      }
+    }
+  </script>
+</body>
+</html>

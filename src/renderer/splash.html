@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>启动中</title>
+  <style>
+    html, body { background: transparent; overflow: hidden; margin: 0; }
+    body {
+      font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+      display: flex; align-items: center; justify-content: center; height: 100vh;
+      -webkit-app-region: no-drag;
+    }
+    .card {
+      width: 360px; padding: 28px 24px; border-radius: 18px;
+      background: linear-gradient(150deg, #161c38, #10142a);
+      box-shadow: 0 12px 48px rgba(0, 0, 0, .45);
+      border: 1px solid #26305c; text-align: center;
+    }
+    .logo {
+      width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 14px;
+      background: linear-gradient(135deg, #4d6bfe, #0ca678);
+      box-shadow: 0 6px 18px rgba(77, 107, 254, .4);
+    }
+    h1 { font-size: 16px; color: #eef0ff; font-weight: 600; letter-spacing: .3px; }
+    .status { margin-top: 12px; font-size: 12px; color: #8b93b8; min-height: 18px; word-break: break-all; }
+    .spinner {
+      margin: 16px auto 0; width: 26px; height: 26px; border-radius: 50%;
+      border: 3px solid #2c3357; border-top-color: #4d6bfe;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo"></div>
+    <h1>DeepSeek Harness Desktop</h1>
+    <div class="status" id="status">正在启动…</div>
+    <div class="spinner"></div>
+  </div>
+  <script>
+    const el = document.getElementById('status')
+    if (window.shell && window.shell.onStatus) {
+      window.shell.onStatus((text) => { el.textContent = text })
+    }
+  </script>
+</body>
+</html>

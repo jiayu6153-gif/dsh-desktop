@@ -1,0 +1,30 @@
+name: build-release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install deps
+        run: npm ci --legacy-peer-deps
+      - name: Sync complete dsh kernel tree (npm 装出的树不完整)
+        shell: pwsh
+        run: |
+          npm i -g "@deepseek-ai/dsh@0.1.1-rc.2"
+          robocopy "$env:APPDATA\npm\node_modules\@deepseek-ai\dsh" "node_modules\@deepseek-ai\dsh" /E /NFL /NDL /NJH /NJS /NP
+          if ($LASTEXITCODE -le 7) { exit 0 }
+      - run: npm run icon
+      - run: npm run dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*-Setup-*.exe
+            dist/latest*.yml
+            dist/*.blockmap

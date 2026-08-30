@@ -1,0 +1,31 @@
+appId: com.dsh.desktop
+productName: DeepSeek Harness Desktop
+directories:
+  buildResources: assets
+  output: dist
+files:
+  - src/**/*
+npmRebuild: false
+# 直接打包本地已下载的 Electron 发行目录，跳过 GitHub 下载
+electronDist: node_modules/electron/dist
+# 内核以真实 node.exe 子进程运行，纯文件布局最稳妥，不用 asar
+asar: false
+extraResources:
+  # 随安装包携带的 node.exe（scripts/build.js 会把构建机 node 复制到 resources/node/）
+  - from: resources/node/node.exe
+    to: node/node.exe
+win:
+  icon: assets/icon-512.png
+  target:
+    - nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: DeepSeek Harness Desktop
+  artifactName: ${productName}-Setup-${version}.${ext}
+publish:
+  provider: github
+  owner: jiayu6153-gif
+  repo: dsh-desktop

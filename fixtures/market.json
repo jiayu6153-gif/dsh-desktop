@@ -1,0 +1,13 @@
+{
+  "name": "本地测试市场",
+  "plugins": [
+    {
+      "id": "sample-preset",
+      "name": "示例预设",
+      "description": "仅用于验证插件市场安装/解压链路的最小预设包（无实际插件）",
+      "version": "0.0.1",
+      "type": "preset",
+      "url": "http://127.0.0.1:8090/sample-preset.zip"
+    }
+  ]
+}
