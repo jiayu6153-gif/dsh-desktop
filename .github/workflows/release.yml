@@ -29,8 +29,20 @@ jobs:
           tar -xzf vendor\dsh-kernel-0.1.1-rc.2.tar.gz -C node_modules\@deepseek-ai
           if (-not (Test-Path node_modules\@deepseek-ai\dsh\lib\bin.js)) { Write-Error "vendored dsh tree missing" }
       - run: npm run icon
-      - run: npm run dist
-      - uses: softprops/action-gh-release@v2
+      - name: Build installer
+        run: npm run dist 2>&1 | Tee-Object -FilePath dist-log.txt
+      - name: Publish debug log on failure
+        if: failure()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ci-debug
+          name: CI 调试日志
+          files: dist-log.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish release
+        if: success()
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/*-Setup-*.exe
