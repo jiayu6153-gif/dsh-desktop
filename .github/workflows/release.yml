@@ -7,22 +7,44 @@ on:
 jobs:
   release:
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Install deps
-        run: npm ci --legacy-peer-deps
-      - name: Sync complete dsh kernel tree (npm 装出的树不完整)
-        shell: pwsh
+      - name: Info
         run: |
-          npm i -g "@deepseek-ai/dsh@0.1.1-rc.2"
-          robocopy "$env:APPDATA\npm\node_modules\@deepseek-ai\dsh" "node_modules\@deepseek-ai\dsh" /E /NFL /NDL /NJH /NJS /NP
-          if ($LASTEXITCODE -le 7) { exit 0 }
+          node --version
+          npm --version
+      - name: Install deps
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
+      - name: Ensure electron binary
+        run: |
+          if (-not (Test-Path node_modules\electron\dist\electron.exe)) {
+            node node_modules\electron\install.js
+          }
+      - name: Extract vendored dsh kernel tree
+        run: |
+          New-Item -ItemType Directory -Force -Path node_modules\@deepseek-ai | Out-Null
+          tar -xzf vendor\dsh-kernel-0.1.1-rc.2.tar.gz -C node_modules\@deepseek-ai
+          if (-not (Test-Path node_modules\@deepseek-ai\dsh\lib\bin.js)) { Write-Error "vendored dsh tree missing" }
       - run: npm run icon
-      - run: npm run dist
-      - uses: softprops/action-gh-release@v2
+      - name: Build installer
+        run: npm run dist 2>&1 | Tee-Object -FilePath dist-log.txt
+      - name: Publish debug log on failure
+        if: failure()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ci-debug
+          name: CI 调试日志
+          files: dist-log.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish release
+        if: success()
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/*-Setup-*.exe

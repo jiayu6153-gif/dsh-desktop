@@ -23,7 +23,7 @@ const run = (cmd) => {
   execSync(cmd, { cwd: root, stdio: 'inherit' })
 }
 
-run('npx electron-builder --dir')
+run('npx electron-builder --dir --publish never')
 
 const src = path.join(root, 'node_modules', '@deepseek-ai', 'dsh')
 const dst = path.join(root, 'dist', 'win-unpacked', 'resources', 'dsh')
@@ -31,5 +31,6 @@ fs.rmSync(dst, { recursive: true, force: true })
 fs.cpSync(src, dst, { recursive: true })
 console.log('dsh kernel tree copied to', dst)
 
-run('npx electron-builder --win nsis --prepackaged dist/win-unpacked')
+// --publish never：发布由 CI 的 softprops 步骤统一负责，避免构建时向 GitHub 自动发布（需 GH_TOKEN）
+run('npx electron-builder --win nsis --prepackaged dist/win-unpacked --publish never')
 console.log('DONE: dist/DeepSeek Harness Desktop-Setup-0.1.0.exe')
