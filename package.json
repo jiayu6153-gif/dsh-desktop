@@ -1,7 +1,7 @@
 {
   "name": "dsh-desktop",
   "productName": "DeepSeek Harness Desktop",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "DeepSeek Harness 桌面外壳：托盘常驻、随机端口、开机美化、自动更新、插件市场",
   "main": "src/main/main.js",
@@ -9,7 +9,7 @@
   "license": "MIT",
   "scripts": {
     "start": "electron .",
-    "icon": "node scripts/make-icon.js",
+    "icon": "node scripts/make-ico.js",
     "pack": "electron-builder --dir",
     "dist": "node scripts/build.js"
   },

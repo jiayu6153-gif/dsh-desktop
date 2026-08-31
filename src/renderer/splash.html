@@ -17,9 +17,11 @@
       border: 1px solid #26305c; text-align: center;
     }
     .logo {
-      width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 14px;
-      background: linear-gradient(135deg, #4d6bfe, #0ca678);
-      box-shadow: 0 6px 18px rgba(77, 107, 254, .4);
+      width: 96px; height: 96px; margin: 0 auto 14px;
+      display: block; object-fit: contain;
+      background: #f5f7ff; border-radius: 18px; padding: 12px;
+      box-sizing: border-box;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
     }
     h1 { font-size: 16px; color: #eef0ff; font-weight: 600; letter-spacing: .3px; }
     .status { margin-top: 12px; font-size: 12px; color: #8b93b8; min-height: 18px; word-break: break-all; }
@@ -33,7 +35,7 @@
 </head>
 <body>
   <div class="card">
-    <div class="logo"></div>
+    <img class="logo" src="logo-256.png" alt="DeepSeek" />
     <h1>DeepSeek Harness Desktop</h1>
     <div class="status" id="status">正在启动…</div>
     <div class="spinner"></div>
